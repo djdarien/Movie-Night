@@ -1,0 +1,182 @@
+.movie-card {
+  background: linear-gradient(145deg, #2d0a0a, #1a0505);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(139, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.movie-card.expanded {
+  grid-row: span 2;
+}
+
+.poster-container {
+  position: relative;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+}
+
+.poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.movie-card:hover .poster {
+  transform: scale(1.05);
+}
+
+.poster-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #3d1a1a, #2a0a0a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+}
+
+.poster-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.movie-card:hover .poster-overlay {
+  opacity: 1;
+}
+
+.trailer-btn {
+  background: linear-gradient(135deg, #8B0000, #b30000);
+  border: 2px solid #FFD700;
+  color: #FFD700;
+  padding: 12px 24px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.trailer-btn:hover {
+  background: #FFD700;
+  color: #1a0505;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.rating-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #FFD700;
+  border-radius: 20px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #FFD700;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.star {
+  color: #FFD700;
+}
+
+.movie-info {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.movie-title {
+  color: #f5f5f5;
+  font-size: 1rem;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.movie-meta {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.year {
+  color: #d4a574;
+  font-size: 0.85rem;
+}
+
+.runtime {
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.movie-description {
+  color: #ccc;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0 0 10px 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.movie-description.full {
+  color: #f5f5f5;
+}
+
+.read-more {
+  color: #FFD700;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-left: 5px;
+}
+
+.read-more:hover {
+  text-decoration: underline;
+}
+
+.genres {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.genre-tag {
+  background: rgba(139, 0, 0, 0.3);
+  border: 1px solid rgba(139, 0, 0, 0.5);
+  color: #d4a574;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+}
