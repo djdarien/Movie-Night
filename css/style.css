@@ -25,7 +25,18 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: linear-gradient(180deg, #1a0505 0%, #0d0202 100%);
+  background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color: #f5f5f5;
+}
+
+.film-grain {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.13;
+  background-image: url('https://www.transparenttextures.com/patterns/asfalt-light.png');
 }
 
 h1 {
@@ -42,13 +53,6 @@ button {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(180deg, #1a0505 0%, #0d0202 100%);
-  min-height: 100vh;
-  color: #f5f5f5;
 }
 
 .app {
@@ -634,6 +638,310 @@ body {
   font-style: italic;
 }
 
+.surprise-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  border: 2px solid #FFD700;
+  color: #FFD700;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  margin-right: 15px;
+}
+
+.surprise-btn:hover {
+  background: #FFD700;
+  color: #1a0505;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  transform: scale(1.05);
+}
+
+.details-modal-content {
+  background: #23232b;
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 24px 0 #0008;
+  max-width: 900px;
+  width: 95%;
+  max-height: 95vh;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.details-modal-content .flex {
+  display: flex;
+}
+
+.details-modal-content .flex-col {
+  flex-direction: column;
+}
+
+.details-modal-content .md\:flex-row {
+  flex-direction: row;
+}
+
+.details-modal-content .md\:w-2\/5 {
+  width: 40%;
+}
+
+.details-modal-content .flex-1 {
+  flex: 1;
+}
+
+.details-modal-content .p-8 {
+  padding: 2rem;
+}
+
+.details-modal-content .md\:pt-8 {
+  padding-top: 2rem;
+}
+
+.details-modal-content .overflow-y-auto {
+  overflow-y: auto;
+}
+
+.details-modal-content .max-h-\[92vh\] {
+  max-height: 92vh;
+}
+
+.details-modal-content .justify-between {
+  justify-content: space-between;
+}
+
+.details-modal-content .items-start {
+  align-items: flex-start;
+}
+
+.details-modal-content .gap-x-3 {
+  gap: 0.75rem;
+}
+
+.details-modal-content .text-4xl {
+  font-size: 2.25rem;
+}
+
+.details-modal-content .font-bold {
+  font-weight: 700;
+}
+
+.details-modal-content .tracking-tighter {
+  letter-spacing: -0.025em;
+}
+
+.details-modal-content .text-3xl {
+  font-size: 1.875rem;
+}
+
+.details-modal-content .text-zinc-500 {
+  color: #71717a;
+}
+
+.details-modal-content .font-light {
+  font-weight: 300;
+}
+
+.details-modal-content .gap-x-4 {
+  gap: 1rem;
+}
+
+.details-modal-content .mt-1 {
+  margin-top: 0.25rem;
+}
+
+.details-modal-content .text-2xl {
+  font-size: 1.5rem;
+}
+
+.details-modal-content .text-yellow-400 {
+  color: #fbbf24;
+}
+
+.details-modal-content .ml-1 {
+  margin-left: 0.25rem;
+}
+
+.details-modal-content .px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.details-modal-content .py-px {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.details-modal-content .bg-zinc-800 {
+  background-color: #27272a;
+}
+
+.details-modal-content .rounded {
+  border-radius: 0.25rem;
+}
+
+.details-modal-content .font-mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Inconsolata, "Roboto Mono", monospace;
+}
+
+.details-modal-content .text-zinc-400 {
+  color: #a1a1aa;
+}
+
+.details-modal-content .hover\:text-white:hover {
+  color: #ffffff;
+}
+
+.details-modal-content .transition-colors {
+  transition: color 0.15s ease-in-out;
+}
+
+.details-modal-content .p-1 {
+  padding: 0.25rem;
+}
+
+.details-modal-content .-mr-2 {
+  margin-right: -0.5rem;
+}
+
+.details-modal-content .mt-6 {
+  margin-top: 1.5rem;
+}
+
+.details-modal-content .flex-wrap {
+  flex-wrap: wrap;
+}
+
+.details-modal-content .gap-2 {
+  gap: 0.5rem;
+}
+
+.details-modal-content .mb-4 {
+  margin-bottom: 1rem;
+}
+
+.details-modal-content .text-zinc-300 {
+  color: #d4d4d8;
+}
+
+.details-modal-content .leading-relaxed {
+  line-height: 1.625;
+}
+
+.details-modal-content .text-\[15px\] {
+  font-size: 15px;
+}
+
+.details-modal-content .mt-7 {
+  margin-top: 1.75rem;
+}
+
+.details-modal-content .grid {
+  display: grid;
+}
+
+.details-modal-content .grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.details-modal-content .gap-y-5 {
+  row-gap: 1.25rem;
+}
+
+.details-modal-content .text-sm {
+  font-size: 0.875rem;
+}
+
+.details-modal-content .block {
+  display: block;
+}
+
+.details-modal-content .text-xs {
+  font-size: 0.75rem;
+}
+
+.details-modal-content .uppercase {
+  text-transform: uppercase;
+}
+
+.details-modal-content .tracking-widest {
+  letter-spacing: 0.1em;
+}
+
+.details-modal-content .font-medium {
+  font-weight: 500;
+}
+
+.details-modal-content .mt-8 {
+  margin-top: 2rem;
+}
+
+.details-modal-content .gap-3 {
+  gap: 0.75rem;
+}
+
+.details-modal-content .bg-red-600 {
+  background-color: #dc2626;
+}
+
+.details-modal-content .hover\:bg-red-700:hover {
+  background-color: #b91c1c;
+}
+
+.details-modal-content .text-white {
+  color: #ffffff;
+}
+
+.details-modal-content .font-semibold {
+  font-weight: 600;
+}
+
+.details-modal-content .px-7 {
+  padding-left: 1.75rem;
+  padding-right: 1.75rem;
+}
+
+.details-modal-content .py-3\.5 {
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+}
+
+.details-modal-content .rounded-3xl {
+  border-radius: 1.5rem;
+}
+
+.details-modal-content .border {
+  border: 1px solid;
+}
+
+.details-modal-content .border-zinc-700 {
+  border-color: #3f3f46;
+}
+
+.details-modal-content .hover\:bg-zinc-800:hover {
+  background-color: #27272a;
+}
+
+.details-modal-content .px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.details-modal-content .mt-5 {
+  margin-top: 1.25rem;
+}
+
+.details-modal-content .text-\[10px\] {
+  font-size: 10px;
+}
+
+.details-modal-content .text-center {
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .filter-bar {
     flex-direction: column;
@@ -656,8 +964,29 @@ body {
     margin: 10px auto 0;
   }
   
+  .surprise-btn {
+    margin: 10px auto 0;
+    width: 100%;
+  }
+  
   .searching-notice {
     text-align: center;
+  }
+  
+  .details-modal-content .md\:flex-row {
+    flex-direction: column;
+  }
+  
+  .details-modal-content .md\:w-2\/5 {
+    width: 100%;
+  }
+  
+  .details-modal-content .md\:pt-8 {
+    padding-top: 2rem;
+  }
+  
+  .details-modal-content .grid-cols-2 {
+    grid-template-columns: 1fr;
   }
 }
 

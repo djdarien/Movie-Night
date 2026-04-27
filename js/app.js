@@ -7,7 +7,8 @@ const state = {
     durationMax: null,
     genre: null,
     platform: null,
-    mood: null
+    mood: null,
+    decade: null
   },
   searchQuery: '',
   isSearching: false,
@@ -30,6 +31,8 @@ const genreBtn = document.getElementById('genre-btn');
 const genreDropdown = document.getElementById('genre-dropdown');
 const platformButtons = document.getElementById('platform-buttons');
 const durationChipsContainer = document.getElementById('duration-chips');
+const decadeChipsContainer = document.getElementById('decade-chips');
+const surpriseMeBtn = document.getElementById('surprise-me-btn');
 const clearFiltersBtn = document.getElementById('clear-filters');
 const searchingNotice = document.getElementById('searching-notice');
 const loadingState = document.getElementById('loading-state');
@@ -42,6 +45,21 @@ const closeModalBtn = document.getElementById('close-modal');
 const modalTitle = document.getElementById('modal-title');
 const modalSubtitle = document.getElementById('modal-subtitle');
 const videoContainer = document.getElementById('video-container');
+const detailsModal = document.getElementById('details-modal');
+const closeDetailsModalBtn = document.getElementById('close-details-modal');
+const detailsPoster = document.getElementById('details-poster');
+const detailsTitle = document.getElementById('details-title');
+const detailsYear = document.getElementById('details-year');
+const detailsRating = document.getElementById('details-rating');
+const detailsDuration = document.getElementById('details-duration');
+const detailsGenres = document.getElementById('details-genres');
+const detailsSynopsis = document.getElementById('details-synopsis');
+const detailsDirector = document.getElementById('details-director');
+const detailsCast = document.getElementById('details-cast');
+const detailsLanguage = document.getElementById('details-language');
+const detailsMoods = document.getElementById('details-moods');
+const watchTrailerBtn = document.getElementById('watch-trailer-btn');
+const addToWatchlistBtn = document.getElementById('add-to-watchlist-btn');
 
 async function init() {
   try {
@@ -50,6 +68,7 @@ async function init() {
       state.genreMap[g.id] = g.name;
     });
     renderMoodChips();
+    renderDecadeChips();
     renderGenreDropdown();
     await fetchMovies();
   } catch (err) {
@@ -69,6 +88,22 @@ function renderMoodChips() {
       if (!state.isSearching) fetchMovies(true);
     };
     moodChipsContainer.appendChild(chip);
+  });
+}
+
+function renderDecadeChips() {
+  decadeChipsContainer.innerHTML = '';
+  const decades = ['2020s', '2010s', '2000s', '1990s', '1980s'];
+  decades.forEach(decade => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = decade;
+    chip.onclick = () => {
+      state.filters.decade = state.filters.decade === decade ? null : decade;
+      updateFilterUI();
+      if (!state.isSearching) fetchMovies(true);
+    };
+    decadeChipsContainer.appendChild(chip);
   });
 }
 
@@ -104,6 +139,10 @@ function updateFilterUI() {
                       (range === '120-150' && state.filters.durationMin === 120 && state.filters.durationMax === 150) ||
                       (range === '150+' && state.filters.durationMin === 150);
     chip.classList.toggle('active', isActive);
+  });
+
+  document.querySelectorAll('#decade-chips .chip').forEach(chip => {
+    chip.classList.toggle('active', state.filters.decade === chip.textContent);
   });
 }
 
@@ -177,7 +216,11 @@ function renderMovies() {
           </div>
         </div>
       `;
-      card.querySelector('.trailer-btn').onclick = () => openTrailer(movie.id, movie.title);
+      card.onclick = () => showMovieDetails(movie);
+      card.querySelector('.trailer-btn').onclick = (e) => {
+        e.stopPropagation();
+        openTrailer(movie.id, movie.title);
+      };
       movieGrid.appendChild(card);
     });
   }
@@ -193,6 +236,47 @@ async function openTrailer(id, title) {
   modalSubtitle.textContent = 'Official Trailer';
   videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${key}" frameborder="0" allowfullscreen></iframe>`;
   trailerModal.style.display = 'flex';
+}
+
+async function showMovieDetails(movie) {
+  try {
+    const details = await api.getMovieDetails(movie.id);
+    const platformBadgesElement = document.getElementById('details-platform-badges');
+    const watchlistText = document.getElementById('watchlist-text');
+
+    detailsPoster.src = movie.poster_path ? api.IMAGE_BASE_URL + movie.poster_path : 'https://via.placeholder.com/500x750?text=No+Image';
+    detailsPoster.alt = `${movie.title} poster`;
+    detailsTitle.textContent = movie.title;
+    detailsYear.textContent = movie.release_date?.substring(0, 4) || 'N/A';
+    detailsRating.textContent = movie.vote_average?.toFixed(1) || 'N/A';
+    detailsDuration.textContent = `${details.runtime || 'N/A'} min`;
+    detailsGenres.innerHTML = movie.genre_ids?.map(id => `<span class="px-3 py-1 bg-zinc-800 rounded text-sm font-medium">${state.genreMap[id]}</span>`).join('') || '';
+    detailsSynopsis.textContent = movie.overview || 'No description available.';
+    detailsDirector.textContent = details.credits?.crew?.find(c => c.job === 'Director')?.name || 'N/A';
+    detailsCast.textContent = details.credits?.cast?.slice(0, 3).map(c => c.name).join(', ') || 'N/A';
+    detailsLanguage.textContent = details.original_language?.toUpperCase() || 'N/A';
+    detailsMoods.textContent = 'Romantic, Cozy'; // Placeholder, can enhance
+
+    // Platform badges (simplified for demo)
+    platformBadgesElement.innerHTML = '<span class="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded">NETFLIX</span>';
+
+    detailsModal.style.display = 'flex';
+
+    // Set up buttons
+    watchTrailerBtn.onclick = () => {
+      openTrailer(movie.id, movie.title);
+      detailsModal.style.display = 'none';
+    };
+    addToWatchlistBtn.onclick = () => {
+      alert('Added to watchlist! (Feature to be implemented)');
+    };
+  } catch (err) {
+    showError('Failed to load movie details.');
+  }
+}
+
+function hideDetailsModal() {
+  detailsModal.style.display = 'none';
 }
 
 function showLoading(isLoading) {
@@ -265,10 +349,34 @@ durationChipsContainer.onclick = (e) => {
 };
 
 clearFiltersBtn.onclick = () => {
-  state.filters = { durationMin: null, durationMax: null, genre: null, platform: null, mood: null };
+  state.filters = { durationMin: null, durationMax: null, genre: null, platform: null, mood: null, decade: null };
   genreBtn.querySelector('span').textContent = 'Select Genre';
   updateFilterUI();
   fetchMovies(true);
+};
+
+surpriseMeBtn.onclick = async () => {
+  showLoading(true);
+  try {
+    const data = await api.discoverMovies({ page: Math.floor(Math.random() * 10) + 1 });
+    const movies = data.results || [];
+    if (movies.length > 0) {
+      const randomMovie = movies[Math.floor(Math.random() * movies.length)];
+      showMovieDetails(randomMovie);
+    }
+  } catch (err) {
+    showError('Failed to find a surprise movie.');
+  }
+  showLoading(false);
+};
+
+decadeChipsContainer.onclick = (e) => {
+  if (e.target.classList.contains('chip')) {
+    const decade = e.target.textContent;
+    state.filters.decade = state.filters.decade === decade ? null : decade;
+    updateFilterUI();
+    if (!state.isSearching) fetchMovies(true);
+  }
 };
 
 loadMoreBtn.onclick = () => {
@@ -281,8 +389,20 @@ closeModalBtn.onclick = () => {
   videoContainer.innerHTML = '';
 };
 
+closeDetailsModalBtn.onclick = () => {
+  detailsModal.style.display = 'none';
+};
+
 window.onclick = (e) => {
   if (e.target === trailerModal) closeModalBtn.onclick();
+  if (e.target === detailsModal) closeDetailsModalBtn.onclick();
+};
+
+window.onkeydown = (e) => {
+  if (e.key === 'Escape') {
+    if (trailerModal.style.display === 'flex') closeModalBtn.onclick();
+    if (detailsModal.style.display === 'flex') closeDetailsModalBtn.onclick();
+  }
 };
 
 init();

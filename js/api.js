@@ -13,6 +13,7 @@ export const MOOD_KEYWORDS = {
   'intense': [9663, 10714, 10702],
   'thought-provoking': [9840, 9951, 10183],
   'romantic': [9837, 13088, 12192],
+  'date-night': [9837, 13088, 12192, 9713], // Romantic + feel-good
   'adventurous': [9663, 10596, 9715],
   'funny': [9713, 10596],
   'suspenseful': [9663, 10714],
@@ -41,7 +42,7 @@ export async function getGenres() {
 }
 
 export async function discoverMovies(filters = {}) {
-  const { genre, durationMin, durationMax, platform, mood, page = 1 } = filters;
+  const { genre, durationMin, durationMax, platform, mood, decade, page = 1 } = filters;
   
   const params = {
     language: 'en-US',
@@ -65,6 +66,13 @@ export async function discoverMovies(filters = {}) {
   if (mood && MOOD_KEYWORDS[mood]) {
     const moodKeywords = MOOD_KEYWORDS[mood].join('|');
     params.with_keywords = moodKeywords;
+  }
+
+  if (decade) {
+    const startYear = decade.replace('s', '');
+    const endYear = (parseInt(startYear) + 9).toString();
+    params['primary_release_date.gte'] = `${startYear}-01-01`;
+    params['primary_release_date.lte'] = `${endYear}-12-31`;
   }
   
   // Apply the safety filter
