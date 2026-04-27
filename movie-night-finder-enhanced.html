@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Night Finder • Enhanced</title>
+    <meta name="description" content="Find the perfect movie for your movie night. Advanced filters, smart recommendations, watchlist &amp; trailers.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Inter:wght@400;500;600&amp;display=swap');
+        
+        :root {
+            --accent: #e50914;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .title-font {
+            font-family: 'Playfair Display', Georgia, serif;
+            letter-spacing: -0.025em;
+        }
+
+        .cinema-bg {
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
+        }
+
+        .film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.015) 50%, transparent 50%),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 50%, transparent 50%);
+            background-size: 4px 4px;
+            pointer-events: none;
+            z-index: 1;
+            mix-blend-mode: overlay;
+        }
+
+        .marquee-lights {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .light {
+            width: 8px;
+            height: 8px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 
+                0 0 12px #ffd700,
+                0 0 24px #ffaa00;
+            animation: marquee-flicker 1.5s infinite alternate;
+        }
+        
+        .light:nth-child(2) { animation-delay: 0.2s; }
+        .light:nth-child(3) { animation-delay: 0.4s; }
+        .light:nth-child(4) { animation-delay: 0.6s; }
+        .light:nth-child(5) { animation-delay: 0.8s; }
+
+        @keyframes marquee-flicker {
+            0% { opacity: 0.6; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.1); }
+        }
+
+        .movie-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-12px) scale(1.03);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+        }
+        
+        .movie-card .poster {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .movie-card:hover .poster {
+            transform: scale(1.15);
+        }
+
+        .filter-chip {
+            transition: all 0.2s ease;
+        }
+        
+        .filter-chip.active {
+            background-color: #e50914;
+            color: white;
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.3);
+        }
+
+        .platform-btn.active {
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.4);
+            transform: scale(1.05);
+        }
+
+        .section-header {
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .modal {
+            animation: modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modal-pop {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .movie-grid {
+            scrollbar-width: thin;
+            scrollbar-color: #4b5563 #1f2937;
+        }
+
+        .rating-star {
+            color: #fbbf24;
+        }
+
+        .nav-active {
+            border-bottom: 3px solid #e50914;
+        }
+
+        .film-reel {
+            animation: spin-reel 2s linear infinite;
+        }
+
+        .stat-value {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .synopsis {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200 cinema-bg">
+    <!-- Subtle film grain overlay -->
+    <div class="film-grain"></div>
+
+    <!-- Header -->
+    <header class="relative bg-black border-b border-zinc-800 py-6 overflow-hidden">
+        <div class="curtain-left absolute left-0 top-0 w-1/3 h-full bg-gradient-to-r from-black to-transparent"></div>
+        <div class="curtain-right absolute right-0 top-0 w-1/3 h-full bg-gradient-to-l from-black to-transparent"></div>
+        
+        <div class="max-w-screen-2xl mx-auto px-8 relative z-10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-x-3">
+                        <div class="w-11 h-11 bg-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-900/50">
+                            <i class="fa-solid fa-film text-white text-3xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="title-font text-6xl font-bold tracking-tighter">MOVIE NIGHT</h1>
+                            <p class="text-red-500 text-sm font-semibold -mt-1 tracking-[3px]">FINDER</p>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mt-1 text-lg">Find the perfect film for every kind of night</p>
+                </div>
+                
+                <div class="flex items-center gap-x-4">
+                    <!-- Watchlist Button -->
+                    <button onclick="showWatchlist()" 
+                            class="flex items-center gap-x-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 px-5 py-2.5 rounded-3xl text-sm font-medium transition-colors">
+                        <i class="fa-solid fa-heart text-red-500"></i>
+                        <span>My Watchlist</span>
+                        <span id="watchlist-count" 
+                              class="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    
+                    <!-- Theme / User -->
+                    <div class="flex items-center gap-x-2 bg-zinc-900 border border-zinc-700 rounded-3xl px-2 py-1">
+                        <div class="w-8 h-8 bg-zinc-700 rounded-2xl overflow-hidden ring-2 ring-offset-2 ring-offset-zinc-950 ring-zinc-700">
+                            <img src="https://picsum.photos/id/64/32/32" alt="Your avatar" class="w-full h-full object-cover">
+                        </div>
+                        <div class="pr-3">
+                            <p class="text-xs font-medium">Alex Rivera</p>
+                            <p class="text-[10px] text-emerald-400 -mt-0.5">Premium</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Animated marquee lights -->
+        <div class="marquee-lights">
+            <div class="light"></div>
+            <div class="light"></div>
+            <div class="light"></div>
+            <div class="light"></div>
+            <div class="light"></div>
+        </div>
+    </header>
+
+    <!-- Search + Quick Actions -->
+    <div class="max-w-screen-2xl mx-auto px-8 pt-8">
+        <div class="flex flex-col lg:flex-row gap-4 items-end">
+            <!-- Search -->
+            <div class="flex-1">
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-search text-zinc-500 text-xl"></i>
+                    </div>
+                    <input type="text" id="search-input" 
+                           class="w-full bg-zinc-900 border border-zinc-700 focus:border-red-500 text-lg pl-14 pr-5 py-4 rounded-3xl placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-red-500/30"
+                           placeholder="Search titles, directors, or vibes (e.g. 'mind bending sci-fi')">
+                    <button id="clear-search" onclick="clearSearch()"
+                            class="absolute inset-y-0 right-0 pr-5 hidden items-center text-zinc-400 hover:text-white">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Surprise Me -->
+            <button onclick="surpriseMe()" 
+                    class="flex-shrink-0 group flex items-center gap-x-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 transition-all px-8 py-[17px] rounded-3xl font-semibold text-white shadow-lg shadow-red-900/40 active:scale-[0.985]">
+                <i class="fa-solid fa-magic group-active:rotate-12 transition-transform"></i>
+                <span class="font-bold tracking-wide">SURPRISE ME</span>
+            </button>
+        </div>
+        
+        <p class="text-xs text-zinc-500 mt-2 px-1 flex items-center gap-x-1.5">
+            <i class="fa-solid fa-lightbulb"></i> 
+            <span>Pro tip: Try "cozy" or "mind-bending" for instant inspiration</span>
+        </p>
+    </div>
+
+    <!-- Filters -->
+    <div class="max-w-screen-2xl mx-auto px-8 pt-6">
+        <div class="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-6">
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-x-3">
+                    <h3 class="section-header text-red-400">Refine your night</h3>
+                    <div id="active-filters-count" 
+                         class="hidden px-3 py-1 bg-red-950 text-red-400 text-xs font-bold rounded-full items-center gap-x-1">
+                        <span id="active-count">0</span> active
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-x-2">
+                    <!-- Presets -->
+                    <div class="flex items-center gap-x-1.5 text-xs">
+                        <span class="text-zinc-500 hidden md:block">Quick presets:</span>
+                        <button onclick="applyPreset('date-night')" 
+                                class="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors">Date Night</button>
+                        <button onclick="applyPreset('family-fun')" 
+                                class="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors">Family Fun</button>
+                        <button onclick="applyPreset('action-night')" 
+                                class="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors">Action Night</button>
+                        <button onclick="applyPreset('chill-evening')" 
+                                class="px-3 py-1 text-xs bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors">Chill Evening</button>
+                    </div>
+                    
+                    <button onclick="clearAllFilters()" 
+                            class="text-xs flex items-center gap-x-1.5 text-zinc-400 hover:text-red-400 transition-colors px-3 py-1 rounded-2xl hover:bg-zinc-800">
+                        <i class="fa-solid fa-undo text-xs"></i>
+                        <span>Clear all</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                
+                <!-- Vibe / Mood -->
+                <div>
+                    <label class="section-header text-zinc-400 mb-2 block">Vibe</label>
+                    <div id="mood-chips" class="flex flex-wrap gap-1.5"></div>
+                </div>
+                
+                <!-- Genre -->
+                <div>
+                    <label class="section-header text-zinc-400 mb-2 block">Genre</label>
+                    <div id="genre-chips" class="flex flex-wrap gap-1.5"></div>
+                </div>
+                
+                <!-- Platform -->
+                <div>
+                    <label class="section-header text-zinc-400 mb-2 block">Available on</label>
+                    <div class="flex flex-wrap gap-2" id="platform-buttons">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                
+                <!-- Duration -->
+                <div>
+                    <label class="section-header text-zinc-400 mb-2 block">Runtime</label>
+                    <div id="duration-chips" class="flex flex-wrap gap-1.5"></div>
+                </div>
+                
+                <!-- Rating + Decade -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="section-header text-zinc-400 mb-1.5 block flex items-center justify-between">
+                            <span>Min Rating</span>
+                            <span id="rating-value" class="font-mono text-red-400 font-bold">6.0</span>
+                        </label>
+                        <input type="range" id="rating-slider" min="0" max="10" step="0.5" value="6.0"
+                               class="w-full accent-red-600 bg-zinc-700 rounded-full">
+                    </div>
+                    
+                    <div>
+                        <label class="section-header text-zinc-400 mb-1.5 block">Decade</label>
+                        <select id="decade-select" onchange="applyFilters()"
+                                class="w-full bg-zinc-800 border border-zinc-700 text-sm rounded-2xl px-4 py-2 focus:outline-none focus:border-red-500">
+                            <option value="all">Any decade</option>
+                            <option value="2020">2020s</option>
+                            <option value="2010">2010s</option>
+                            <option value="2000">2000s</option>
+                            <option value="1990">1990s</option>
+                            <option value="1980">1980s &amp; earlier</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Header -->
+    <div class="max-w-screen-2xl mx-auto px-8 pt-8 flex items-end justify-between">
+        <div>
+            <div id="results-header" class="flex items-baseline gap-x-3">
+                <h2 class="text-3xl font-semibold tracking-tight">Discover movies</h2>
+                <span id="results-count" 
+                      class="text-red-500 font-mono text-sm tracking-widest bg-red-950 px-3 py-0.5 rounded-full">128 matches</span>
+            </div>
+            <p id="results-subtitle" class="text-sm text-zinc-500">Showing movies that match your vibe</p>
+        </div>
+        
+        <div class="flex items-center gap-x-3">
+            <!-- Sort -->
+            <div class="flex items-center gap-x-2 text-sm">
+                <span class="text-zinc-500">Sort by</span>
+                <select id="sort-select" onchange="applyFilters()" 
+                        class="bg-zinc-900 border border-zinc-700 text-sm rounded-2xl px-4 py-2 focus:outline-none focus:border-red-500">
+                    <option value="match">Best Match</option>
+                    <option value="rating-desc">Highest Rated</option>
+                    <option value="rating-asc">Lowest Rated</option>
+                    <option value="year-desc">Newest First</option>
+                    <option value="duration-asc">Shortest First</option>
+                    <option value="duration-desc">Longest First</option>
+                </select>
+            </div>
+            
+            <!-- View Toggle -->
+            <div class="flex bg-zinc-900 border border-zinc-700 rounded-2xl p-1">
+                <button onclick="setViewMode('grid')" id="view-grid-btn"
+                        class="px-3 py-1.5 rounded-xl text-sm flex items-center gap-x-1.5 bg-zinc-800">
+                    <i class="fa-solid fa-th-large"></i>
+                </button>
+                <button onclick="setViewMode('list')" id="view-list-btn"
+                        class="px-3 py-1.5 rounded-xl text-sm flex items-center gap-x-1.5 text-zinc-400 hover:text-white">
+                    <i class="fa-solid fa-list"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movie Grid -->
+    <div class="max-w-screen-2xl mx-auto px-8 pt-4 pb-12">
+        <div id="movie-grid" 
+             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-5 movie-grid">
+            <!-- Populated dynamically by JS -->
+        </div>
+        
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-16">
+            <div class="mx-auto w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6">
+                <i class="fa-solid fa-film text-5xl text-zinc-700"></i>
+            </div>
+            <h3 class="text-2xl font-semibold mb-2">No movies match your filters</h3>
+            <p class="text-zinc-400 max-w-xs mx-auto">Try broadening your search or choosing different vibes</p>
+            <button onclick="clearAllFilters()" 
+                    class="mt-6 px-6 py-2.5 bg-white text-zinc-950 font-semibold rounded-3xl text-sm flex items-center gap-x-2 mx-auto hover:bg-zinc-100 transition-colors">
+                <i class="fa-solid fa-sync"></i>
+                <span>Reset filters</span>
+            </button>
+        </div>
+        
+        <!-- Loading State (for future) -->
+        <div id="loading-state" class="hidden text-center py-12">
+            <div class="inline-flex items-center gap-x-3">
+                <div class="w-3 h-3 bg-red-500 rounded-full animate-bounce"></div>
+                <div class="w-3 h-3 bg-red-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                <div class="w-3 h-3 bg-red-500 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+            </div>
+            <p class="mt-4 text-zinc-400">Curating the perfect selection...</p>
+        </div>
+    </div>
+
+    <!-- Movie Details Modal -->
+    <div id="details-modal" onclick="if (event.target.id === 'details-modal') hideDetailsModal()" 
+         class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="modal bg-zinc-900 border border-zinc-700 rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-hidden shadow-2xl">
+            
+            <div class="flex flex-col md:flex-row">
+                <!-- Poster -->
+                <div class="md:w-2/5 relative">
+                    <img id="modal-poster" class="w-full h-full object-cover md:rounded-l-3xl" alt="Movie poster">
+                    <div class="absolute top-4 left-4 flex gap-2">
+                        <div id="modal-platform-badges" class="flex gap-1.5"></div>
+                    </div>
+                    <div class="absolute bottom-0 inset-x-0 h-2/3 bg-gradient-to-t from-black to-transparent md:hidden"></div>
+                </div>
+                
+                <!-- Info -->
+                <div class="flex-1 p-8 md:pt-8 overflow-y-auto max-h-[92vh]">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-x-3">
+                                <h2 id="modal-title" class="text-4xl font-bold tracking-tighter"></h2>
+                                <span id="modal-year" class="text-3xl text-zinc-500 font-light"></span>
+                            </div>
+                            <div class="flex items-center gap-x-4 mt-1">
+                                <div class="flex items-center">
+                                    <span id="modal-rating" class="text-2xl font-bold text-yellow-400"></span>
+                                    <i class="fa-solid fa-star ml-1 text-yellow-400"></i>
+                                </div>
+                                <span id="modal-duration" class="text-sm px-3 py-px bg-zinc-800 rounded font-mono"></span>
+                            </div>
+                        </div>
+                        
+                        <button onclick="hideDetailsModal()" 
+                                class="text-zinc-400 hover:text-white transition-colors p-1 -mr-2">
+                            <i class="fa-solid fa-times text-3xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <div class="flex flex-wrap gap-2 mb-4" id="modal-genres"></div>
+                        
+                        <p id="modal-synopsis" class="text-zinc-300 leading-relaxed text-[15px]"></p>
+                    </div>
+                    
+                    <div class="mt-7 grid grid-cols-2 gap-y-5 text-sm">
+                        <div>
+                            <span class="block text-xs uppercase tracking-widest text-zinc-500">Directed by</span>
+                            <span id="modal-director" class="font-medium"></span>
+                        </div>
+                        <div>
+                            <span class="block text-xs uppercase tracking-widest text-zinc-500">Cast</span>
+                            <span id="modal-cast" class="font-medium"></span>
+                        </div>
+                        <div>
+                            <span class="block text-xs uppercase tracking-widest text-zinc-500">Language</span>
+                            <span id="modal-language" class="font-medium"></span>
+                        </div>
+                        <div>
+                            <span class="block text-xs uppercase tracking-widest text-zinc-500">Perfect for</span>
+                            <span id="modal-moods" class="font-medium"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex flex-wrap gap-3">
+                        <button onclick="playTrailerFromModal()" 
+                                class="flex-1 md:flex-none flex items-center justify-center gap-x-2 bg-red-600 hover:bg-red-700 transition-colors text-white font-semibold px-7 py-3.5 rounded-3xl">
+                            <i class="fa-solid fa-play mr-1"></i>
+                            <span>WATCH TRAILER</span>
+                        </button>
+                        
+                        <button onclick="toggleWatchlistFromModal()" id="modal-watchlist-btn"
+                                class="flex-1 md:flex-none flex items-center justify-center gap-x-2 border border-zinc-700 hover:bg-zinc-800 transition-colors px-6 py-3.5 rounded-3xl font-medium">
+                            <i class="fa-solid fa-heart"></i>
+                            <span id="modal-watchlist-text">Save to Watchlist</span>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-5 text-[10px] text-center text-zinc-500">
+                        <i class="fa-solid fa-info-circle mr-1"></i> 
+                        Data is for demonstration. Real availability varies by region.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trailer Modal -->
+    <div id="trailer-modal" onclick="if (event.target.id === 'trailer-modal') closeTrailerModal()" 
+         class="hidden fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="relative w-full max-w-4xl">
+            <button onclick="closeTrailerModal()" 
+                    class="absolute -top-14 right-0 text-white hover:text-red-500 transition-colors text-4xl z-10">
+                <i class="fa-solid fa-times"></i>
+            </button>
+            
+            <div class="bg-black rounded-3xl overflow-hidden shadow-2xl border border-zinc-800">
+                <div id="video-container" class="aspect-video w-full">
+                    <!-- YouTube iframe injected here -->
+                </div>
+                <div class="px-6 py-4 bg-zinc-900 flex items-center justify-between">
+                    <div>
+                        <h3 id="trailer-movie-title" class="font-semibold text-xl"></h3>
+                        <p class="text-xs text-zinc-500">Official Trailer • YouTube</p>
+                    </div>
+                    <button onclick="closeTrailerModal()" 
+                            class="px-5 py-2 text-sm rounded-2xl border border-zinc-700 hover:bg-zinc-800">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="border-t border-zinc-800 py-8 text-center text-xs text-zinc-500 max-w-screen-2xl mx-auto px-8">
+        <div class="flex flex-col md:flex-row items-center justify-center gap-x-6 gap-y-2">
+            <div>Built with ❤️ for movie lovers • All data simulated for demo purposes</div>
+            <div class="hidden md:block">•</div>
+            <div class="flex items-center gap-x-4">
+                <a href="#" class="hover:text-zinc-300 transition-colors">How it works</a>
+                <a href="#" class="hover:text-zinc-300 transition-colors">Submit a movie</a>
+                <a href="#" class="hover:text-zinc-300 transition-colors">Feedback</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Tailwind script configuration
+        function initializeTailwind() {
+            document.documentElement.style.setProperty('--accent', '#e50914');
+            
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            'cinema': ['Playfair Display', 'Georgia', 'serif']
+                        }
+                    }
+                }
+            };
+        }
+
+        // Sample movie database (enhanced with rich metadata)
+        let movies = [
+            {
+                id: 1,
+                title: "Inception",
+                year: 2010,
+                rating: 8.8,
+                duration: 148,
+                genres: ["Sci-Fi", "Action", "Thriller"],
+                moods: ["Epic", "Mind-Bending"],
+                platforms: ["netflix", "prime"],
+                poster: "https://picsum.photos/id/1015/300/450",
+                synopsis: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O., but his tragic past may doom the project and his team to disaster.",
+                trailerId: "YoHD9XEIncQ",
+                cast: ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Elliot Page", "Tom Hardy"],
+                director: "Christopher Nolan",
+                language: "English",
+                perfectFor: "Mind-bending nights with friends"
+            },
+            {
+                id: 2,
+                title: "La La Land",
+                year: 2016,
+                rating: 8.0,
+                duration: 128,
+                genres: ["Romance", "Drama", "Musical"],
+                moods: ["Romantic", "Heartwarming"],
+                platforms: ["disney-plus"],
+                poster: "https://picsum.photos/id/1005/300/450",
+                synopsis: "While navigating their careers in Los Angeles, a pianist and an actress fall in love while attempting to reconcile their aspirations for the future.",
+                trailerId: "0pdqf4P9MB8",
+                cast: ["Ryan Gosling", "Emma Stone", "John Legend"],
+                director: "Damien Chazelle",
+                language: "English",
+                perfectFor: "Cozy date nights"
+            },
+            {
+                id: 3,
+                title: "Dune",
+                year: 2021,
+                rating: 8.0,
+                duration: 155,
+                genres: ["Sci-Fi", "Adventure", "Drama"],
+                moods: ["Epic", "Mind-Bending"],
+                platforms: ["netflix", "prime"],
+                poster: "https://picsum.photos/id/1016/300/450",
+                synopsis: "Paul Atreides, a brilliant and gifted young man born into a great destiny beyond his understanding, must travel to the most dangerous planet in the universe to ensure the future of his family and his people.",
+                trailerId: "8g18jFHCLXk",
+                cast: ["Timothée Chalamet", "Rebecca Ferguson", "Oscar Isaac", "Zendaya"],
+                director: "Denis Villeneuve",
+                language: "English",
+                perfectFor: "Epic group viewings"
+            },
+            {
+                id: 4,
+                title: "Everything Everywhere All at Once",
+                year: 2022,
+                rating: 7.9,
+                duration: 139,
+                genres: ["Action", "Comedy", "Sci-Fi"],
+                moods: ["Funny", "Mind-Bending", "Inspiring"],
+                platforms: ["prime"],
+                poster: "https://picsum.photos/id/102/300/450",
+                synopsis: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save what is important to her by connecting with the lives she could have led in other universes.",
+                trailerId: "wxN1T1uxQ2g",
+                cast: ["Michelle Yeoh", "Ke Huy Quan", "Stephanie Hsu"],
+                director: "Daniel Kwan, Daniel Scheinert",
+                language: "English, Mandarin",
+                perfectFor: "Mind-blowing movie nights"
+            },
+            {
+                id: 5,
+                title: "Get Out",
+                year: 2017,
+                rating: 7.7,
+                duration: 104,
+                genres: ["Horror", "Thriller", "Mystery"],
+                moods: ["Scary", "Thrilling"],
+                platforms: ["netflix"],
+                poster: "https://picsum.photos/id/1033/300/450",
+                synopsis: "A young African-American visits his white girlfriend's parents for the weekend, where his simmering uneasiness about their reception of him eventually reaches a boiling point.",
+                trailerId: "DzfpyUB60YY",
+                cast: ["Daniel Kaluuya", "Allison Williams", "Bradley Whitford"],
+                director: "Jordan Peele",
+                language: "English",
+                perfectFor: "Thrilling horror nights"
+            },
+            {
+                id: 6,
+                title: "Spider-Man: Into the Spider-Verse",
+                year: 2018,
+                rating: 8.4,
+                duration: 117,
+                genres: ["Animation", "Action", "Adventure"],
+                moods: ["Epic", "Action-packed", "Funny"],
+                platforms: ["disney-plus", "netflix"],
+                poster: "https://picsum.photos/id/106/300/450",
+                synopsis: "Teen Miles Morales becomes the Spider-Man of his universe, and must join with five spider-powered individuals from other dimensions to stop a threat for all realities.",
+                trailerId: "g4Hbz2jLxvQ",
+                cast: ["Shameik Moore", "Jake Johnson", "Hailee Steinfeld"],
+                director: "Bob Persichetti, Peter Ramsey, Rodney Rothman",
+                language: "English",
+                perfectFor: "Family action nights"
+            },
+            {
+                id: 7,
+                title: "Parasite",
+                year: 2019,
+                rating: 8.5,
+                duration: 132,
+                genres: ["Thriller", "Drama", "Comedy"],
+                moods: ["Thrilling", "Mind-Bending"],
+                platforms: ["prime"],
+                poster: "https://picsum.photos/id/1074/300/450",
+                synopsis: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+                trailerId: "5xH0HfJHsaY",
+                cast: ["Song Kang-ho", "Lee Sun-kyun", "Cho Yeo-jeong"],
+                director: "Bong Joon Ho",
+                language: "Korean",
+                perfectFor: "Thought-provoking evenings"
+            },
+            {
+                id: 8,
+                title: "Interstellar",
+                year: 2014,
+                rating: 8.6,
+                duration: 169,
+                genres: ["Sci-Fi", "Drama", "Adventure"],
+                moods: ["Epic", "Heartwarming", "Mind-Bending"],
+                platforms: ["netflix"],
+                poster: "https://picsum.photos/id/1018/300/450",
+                synopsis: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival as Earth faces environmental collapse.",
+                trailerId: "zSWdZVtXT7E",
+                cast: ["Matthew McConaughey", "Anne Hathaway", "Jessica Chastain"],
+                director: "Christopher Nolan",
+                language: "English",
+                perfectFor: "Epic emotional journeys"
+            },
+            {
+                id: 9,
+                title: "The Notebook",
+                year: 2004,
+                rating: 7.8,
+                duration: 123,
+                genres: ["Romance", "Drama"],
+                moods: ["Romantic", "Heartwarming"],
+                platforms: ["disney-plus"],
+                poster: "https://picsum.photos/id/1006/300/450",
+                synopsis: "A poor yet passionate young man falls in love with a rich young woman, giving her a sense of freedom, but they are soon separated because of their social differences.",
+                trailerId: "yDJIcYE32NU",
+                cast: ["Ryan Gosling", "Rachel McAdams", "James Garner"],
+                director: "Nick Cassavetes",
+                language: "English",
+                perfectFor: "Romantic date nights"
+            },
+            {
+                id: 10,
+                title: "Mad Max: Fury Road",
+                year: 2015,
+                rating: 8.1,
+                duration: 120,
+                genres: ["Action", "Sci-Fi", "Adventure"],
+                moods: ["Action-packed", "Epic"],
+                platforms: ["prime", "netflix"],
+                poster: "https://picsum.photos/id/107/300/450",
+                synopsis: "In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler in search for her homeland with the aid of a group of female prisoners, a psychotic worshiper, and a drifter named Max.",
+                trailerId: "hEJnMQG9ev8",
+                cast: ["Tom Hardy", "Charlize Theron", "Nicholas Hoult"],
+                director: "George Miller",
+                language: "English",
+                perfectFor: "High-octane action nights"
+            },
+            {
+                id: 11,
+                title: "Coco",
+                year: 2017,
+                rating: 8.4,
+                duration: 105,
+                genres: ["Animation", "Family", "Adventure"],
+                moods: ["Heartwarming", "Inspiring"],
+                platforms: ["disney-plus"],
+                poster: "https://picsum.photos/id/1080/300/450",
+                synopsis: "Aspiring musician Miguel, confronted with his family's ancestral ban on music, enters the Land of the Dead to find his great-great-grandfather, a legendary singer.",
+                trailerId: "Ga6RYejo6Hk",
+                cast: ["Anthony Gonzalez", "Gael García Bernal", "Benjamin Bratt"],
+                director: "Lee Unkrich, Adrian Molina",
+                language: "English, Spanish",
+                perfectFor: "Family movie nights"
+            },
+            {
+                id: 12,
+                title: "Knives Out",
+                year: 2019,
+                rating: 7.9,
+                duration: 130,
+                genres: ["Mystery", "Comedy", "Crime"],
+                moods: ["Funny", "Thrilling"],
+                platforms: ["prime"],
+                poster: "https://picsum.photos/id/1061/300/450",
+                synopsis: "A detective investigates the death of a patriarch of an eccentric, combative family.",
+                trailerId: "qGf8L0fR9mA",
+                cast: ["Daniel Craig", "Chris Evans", "Ana de Armas"],
+                director: "Rian Johnson",
+                language: "English",
+                perfectFor: "Fun mystery nights with friends"
+            },
+            {
+                id: 13,
+                title: "The Matrix",
+                year: 1999,
+                rating: 8.7,
+                duration: 136,
+                genres: ["Sci-Fi", "Action"],
+                moods: ["Epic", "Mind-Bending", "Action-packed"],
+                platforms: ["netflix", "prime"],
+                poster: "https://picsum.photos/id/1071/300/450",
+                synopsis: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
+                trailerId: "vKQi3bBA1y8",
+                cast: ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss"],
+                director: "The Wachowskis",
+                language: "English",
+                perfectFor: "Classic mind-bending nights"
+            },
+            {
+                id: 14,
+                title: "Amélie",
+                year: 2001,
+                rating: 8.3,
+                duration: 122,
+                genres: ["Romance", "Comedy", "Drama"],
+                moods: ["Romantic", "Heartwarming", "Chill"],
+                platforms: ["prime"],
+                poster: "https://picsum.photos/id/1009/300/450",
+                synopsis: "Amélie is an innocent and naive girl in Paris with her own sense of justice. She decides to help those around her and, along the way, discovers love.",
+                trailerId: "HUECWi5pX7o",
+                cast: ["Audrey Tautou", "Mathieu Kassovitz", "Rufus"],
+                director: "Jean-Pierre Jeunet",
+                language: "French",
+                perfectFor: "Whimsical cozy evenings"
+            },
+            {
+                id: 15,
+                title: "John Wick",
+                year: 2014,
+                rating: 7.4,
+                duration: 101,
+                genres: ["Action", "Thriller"],
+                moods: ["Action-packed", "Thrilling"],
+                platforms: ["netflix"],
+                poster: "https://picsum.photos/id/1062/300/450",
+                synopsis: "An ex-hit-man comes out of retirement to track down the gangsters that killed his dog and took everything from him.",
+                trailerId: "2AUmvWm5ZDQ",
+                cast: ["Keanu Reeves", "Michael Nyqvist", "Alfie Allen"],
+                director: "Chad Stahelski, David Leitch",
+                language: "English",
+                perfectFor: "Action-packed solo nights"
+            },
+            {
+                id: 16,
+                title: "Barbie",
+                year: 2023,
+                rating: 7.0,
+                duration: 114,
+                genres: ["Comedy", "Adventure", "Fantasy"],
+                moods: ["Funny", "Colorful", "Inspiring"],
+                platforms: ["prime", "disney-plus"],
+                poster: "https://picsum.photos/id/1027/300/450",
+                synopsis: "Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land. However, when they get a chance to go to the real world, they soon discover the joys and perils of living among humans.",
+                trailerId: "pBk4NYhWNMM",
+                cast: ["Margot Robbie", "Ryan Gosling", "America Ferrera"],
+                director: "Greta Gerwig",
+                language: "English",
+                perfectFor: "Fun colorful group nights"
+            },
+            {
+                id: 17,
+                title: "Oppenheimer",
+                year: 2023,
+                rating: 8.3,
+                duration: 180,
+                genres: ["Drama", "History", "Thriller"],
+                moods: ["Epic", "Thrilling", "Inspiring"],
+                platforms: ["prime"],
+                poster: "https://picsum.photos/id/1036/300/450",
+                synopsis: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II.",
+                trailerId: "uYPbbksJxIg",
+                cast: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
+                director: "Christopher Nolan",
+                language: "English",
+                perfectFor: "Intense historical epics"
+            },
+            {
+                id: 18,
+                title: "Poor Things",
+                year: 2023,
+                rating: 7.9,
+                duration: 141,
+                genres: ["Sci-Fi", "Romance", "Comedy"],
+                moods: ["Funny", "Mind-Bending", "Romantic"],
+                platforms: ["disney-plus"],
+                poster: "https://picsum.photos/id/1041/300/450",
+                synopsis: "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
+                trailerId: "RlbR5N6veqw",
+                cast: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
+                director: "Yorgos Lanthimos",
+                language: "English",
+                perfectFor: "Weird and wonderful nights"
+            }
+        ]
+
+        // State
+        let currentFilters = {
+            moods: new Set(),
+            genres: new Set(),
+            platforms: new Set(),
+            durations: new Set(),
+            minRating: 6.0,
+            decade: 'all'
+        }
+        
+        let currentSearch = ''
+        let currentSort = 'match'
+        let viewMode = 'grid'
+        let watchlist = JSON.parse(localStorage.getItem('movieWatchlist') || '[]')
+        let currentModalMovie = null
+
+        // Initialize everything
+        function init() {
+            initializeTailwind()
+            renderMoodChips()
+            renderGenreChips()
+            renderPlatformButtons()
+            renderDurationChips()
+            
+            // Setup listeners
+            setupListeners()
+            
+            // Initial render
+            updateWatchlistCount()
+            applyFilters()
+            
+            // Random tip in console
+            console.log('%c[Movie Night Finder] Enhanced demo ready. Try the Surprise Me button!', 'color:#666')
+        }
+
+        function setupListeners() {
+            // Search input
+            const searchInput = document.getElementById('search-input')
+            searchInput.addEventListener('input', () => {
+                currentSearch = searchInput.value.toLowerCase().trim()
+                document.getElementById('clear-search').classList.toggle('hidden', !currentSearch)
+                document.getElementById('clear-search').classList.toggle('flex', !!currentSearch)
+                applyFilters()
+            })
+            
+            // Rating slider
+            const ratingSlider = document.getElementById('rating-slider')
+            const ratingValue = document.getElementById('rating-value')
+            
+            ratingSlider.addEventListener('input', () => {
+                currentFilters.minRating = parseFloat(ratingSlider.value)
+                ratingValue.textContent = currentFilters.minRating.toFixed(1)
+                applyFilters()
+            })
+            
+            // Decade select
+            document.getElementById('decade-select').addEventListener('change', () => {
+                currentFilters.decade = document.getElementById('decade-select').value
+                applyFilters()
+            })
+            
+            // Sort select
+            document.getElementById('sort-select').addEventListener('change', () => {
+                currentSort = document.getElementById('sort-select').value
+                applyFilters()
+            })
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault()
+                    document.getElementById('search-input').focus()
+                }
+                if (e.key === 'Escape') {
+                    const details = document.getElementById('details-modal')
+                    const trailer = document.getElementById('trailer-modal')
+                    if (!details.classList.contains('hidden')) hideDetailsModal()
+                    else if (!trailer.classList.contains('hidden')) closeTrailerModal()
+                }
+            })
+            
+            // Make rating value update initially
+            document.getElementById('rating-value').textContent = currentFilters.minRating.toFixed(1)
+        }
+
+        // Render filter chips
+        function renderMoodChips() {
+            const container = document.getElementById('mood-chips')
+            const moods = ["Romantic", "Action-packed", "Funny", "Scary", "Heartwarming", "Thrilling", "Epic", "Chill", "Inspiring", "Mind-Bending"]
+            
+            container.innerHTML = ''
+            
+            moods.forEach(mood => {
+                const chip = document.createElement('button')
+                chip.className = `filter-chip px-3 py-1 text-xs rounded-2xl border border-zinc-700 hover:border-zinc-600 transition-all ${currentFilters.moods.has(mood) ? 'active bg-red-600 border-red-600 text-white' : 'bg-zinc-800 text-zinc-300'}`
+                chip.textContent = mood
+                chip.onclick = () => toggleFilter('moods', mood, chip)
+                container.appendChild(chip)
+            })
+        }
+        
+        function renderGenreChips() {
+            const container = document.getElementById('genre-chips')
+            const genres = ["Action", "Adventure", "Animation", "Comedy", "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Sci-Fi", "Thriller", "Family"]
+            
+            container.innerHTML = ''
+            
+            genres.forEach(genre => {
+                const chip = document.createElement('button')
+                chip.className = `filter-chip px-3 py-1 text-xs rounded-2xl border border-zinc-700 hover:border-zinc-600 transition-all ${currentFilters.genres.has(genre) ? 'active bg-red-600 border-red-600 text-white' : 'bg-zinc-800 text-zinc-300'}`
+                chip.textContent = genre
+                chip.onclick = () => toggleFilter('genres', genre, chip)
+                container.appendChild(chip)
+            })
+        }
+        
+        function renderPlatformButtons() {
+            const container = document.getElementById('platform-buttons')
+            const platforms = [
+                { id: 'netflix', label: 'Netflix', color: '#E50914' },
+                { id: 'disney-plus', label: 'Disney+', color: '#006E95' },
+                { id: 'prime', label: 'Prime Video', color: '#00A89B' }
+            ]
+            
+            container.innerHTML = ''
+            
+            platforms.forEach(platform => {
+                const btn = document.createElement('button')
+                btn.className = `platform-btn px-4 py-1.5 text-xs font-semibold rounded-2xl border transition-all flex-shrink-0`
+                btn.style.borderColor = platform.color
+                btn.style.color = platform.color
+                btn.innerHTML = platform.label
+                
+                if (currentFilters.platforms.has(platform.id)) {
+                    btn.classList.add('active')
+                    btn.style.backgroundColor = platform.color + '22'
+                    btn.style.borderColor = platform.color
+                    btn.style.color = 'white'
+                }
+                
+                btn.onclick = () => {
+                    const isActive = currentFilters.platforms.has(platform.id)
+                    if (isActive) {
+                        currentFilters.platforms.delete(platform.id)
+                        btn.classList.remove('active')
+                        btn.style.backgroundColor = ''
+                        btn.style.color = platform.color
+                    } else {
+                        currentFilters.platforms.add(platform.id)
+                        btn.classList.add('active')
+                        btn.style.backgroundColor = platform.color + '22'
+                        btn.style.color = 'white'
+                    }
+                    applyFilters()
+                }
+                
+                container.appendChild(btn)
+            })
+        }
+        
+        function renderDurationChips() {
+            const container = document.getElementById('duration-chips')
+            const durations = [
+                { label: '< 90 min', value: 'short', max: 90 },
+                { label: '90-120 min', value: 'medium', min: 90, max: 120 },
+                { label: '120-150 min', value: 'long', min: 120, max: 150 },
+                { label: '150+ min', value: 'epic', min: 150 }
+            ]
+            
+            container.innerHTML = ''
+            
+            durations.forEach(dur => {
+                const chip = document.createElement('button')
+                chip.className = `filter-chip px-3 py-1 text-xs rounded-2xl border border-zinc-700 hover:border-zinc-600 transition-all ${currentFilters.durations.has(dur.value) ? 'active bg-red-600 border-red-600 text-white' : 'bg-zinc-800 text-zinc-300'}`
+                chip.textContent = dur.label
+                chip.onclick = () => toggleFilter('durations', dur.value, chip)
+                container.appendChild(chip)
+            })
+        }
+
+        function toggleFilter(type, value, element) {
+            if (currentFilters[type].has(value)) {
+                currentFilters[type].delete(value)
+                element.classList.remove('active', 'bg-red-600', 'border-red-600', 'text-white')
+                element.classList.add('bg-zinc-800', 'text-zinc-300')
+            } else {
+                currentFilters[type].add(value)
+                element.classList.add('active', 'bg-red-600', 'border-red-600', 'text-white')
+                element.classList.remove('bg-zinc-800', 'text-zinc-300')
+            }
+            applyFilters()
+        }
+
+        // Apply all filters and render
+        function applyFilters() {
+            let filtered = [...movies]
+            
+            // Search
+            if (currentSearch) {
+                filtered = filtered.filter(movie => 
+                    movie.title.toLowerCase().includes(currentSearch) ||
+                    movie.synopsis.toLowerCase().includes(currentSearch) ||
+                    movie.director.toLowerCase().includes(currentSearch) ||
+                    movie.cast.some(c => c.toLowerCase().includes(currentSearch)) ||
+                    movie.moods.some(m => m.toLowerCase().includes(currentSearch)) ||
+                    movie.genres.some(g => g.toLowerCase().includes(currentSearch))
+                )
+            }
+            
+            // Mood filter
+            if (currentFilters.moods.size > 0) {
+                filtered = filtered.filter(movie => 
+                    [...currentFilters.moods].some(mood => movie.moods.includes(mood))
+                )
+            }
+            
+            // Genre filter
+            if (currentFilters.genres.size > 0) {
+                filtered = filtered.filter(movie => 
+                    [...currentFilters.genres].some(genre => movie.genres.includes(genre))
+                )
+            }
+            
+            // Platform filter
+            if (currentFilters.platforms.size > 0) {
+                filtered = filtered.filter(movie => 
+                    movie.platforms.some(p => currentFilters.platforms.has(p))
+                )
+            }
+            
+            // Duration filter
+            if (currentFilters.durations.size > 0) {
+                filtered = filtered.filter(movie => {
+                    return [...currentFilters.durations].some(dur => {
+                        if (dur === 'short') return movie.duration < 90
+                        if (dur === 'medium') return movie.duration >= 90 && movie.duration <= 120
+                        if (dur === 'long') return movie.duration > 120 && movie.duration <= 150
+                        if (dur === 'epic') return movie.duration > 150
+                        return false
+                    })
+                })
+            }
+            
+            // Min rating
+            filtered = filtered.filter(movie => movie.rating >= currentFilters.minRating)
+            
+            // Decade
+            if (currentFilters.decade !== 'all') {
+                filtered = filtered.filter(movie => {
+                    const decade = Math.floor(movie.year / 10) * 10
+                    if (currentFilters.decade === '2020') return decade === 2020
+                    if (currentFilters.decade === '2010') return decade === 2010
+                    if (currentFilters.decade === '2000') return decade === 2000
+                    if (currentFilters.decade === '1990') return decade === 1990
+                    if (currentFilters.decade === '1980') return decade <= 1990
+                    return true
+                })
+            }
+            
+            // Sort
+            filtered.sort((a, b) => {
+                switch (currentSort) {
+                    case 'rating-desc':
+                        return b.rating - a.rating
+                    case 'rating-asc':
+                        return a.rating - b.rating
+                    case 'year-desc':
+                        return b.year - a.year
+                    case 'duration-asc':
+                        return a.duration - b.duration
+                    case 'duration-desc':
+                        return b.duration - a.duration
+                    case 'match':
+                    default:
+                        // Best match: count how many filter categories match
+                        let scoreA = 0, scoreB = 0
+                        
+                        // Mood matches
+                        const moodMatchesA = [...currentFilters.moods].filter(m => a.moods.includes(m)).length
+                        const moodMatchesB = [...currentFilters.moods].filter(m => b.moods.includes(m)).length
+                        scoreA += moodMatchesA * 3
+                        scoreB += moodMatchesB * 3
+                        
+                        // Genre matches
+                        const genreMatchesA = [...currentFilters.genres].filter(g => a.genres.includes(g)).length
+                        const genreMatchesB = [...currentFilters.genres].filter(g => b.genres.includes(g)).length
+                        scoreA += genreMatchesA * 2
+                        scoreB += genreMatchesB * 2
+                        
+                        // Platform matches
+                        const platMatchesA = a.platforms.filter(p => currentFilters.platforms.has(p)).length
+                        const platMatchesB = b.platforms.filter(p => currentFilters.platforms.has(p)).length
+                        scoreA += platMatchesA * 2
+                        scoreB += platMatchesB * 2
+                        
+                        // Rating bonus
+                        scoreA += a.rating / 2
+                        scoreB += b.rating / 2
+                        
+                        return scoreB - scoreA
+                }
+            })
+            
+            renderMovies(filtered)
+            updateResultsHeader(filtered.length)
+        }
+
+        function updateResultsHeader(count) {
+            const countEl = document.getElementById('results-count')
+            const subtitleEl = document.getElementById('results-subtitle')
+            
+            countEl.textContent = `${count} ${count === 1 ? 'movie' : 'movies'}`
+            
+            let subtitle = 'Showing movies that match your vibe'
+            if (currentSearch) subtitle = `Results for "${currentSearch}"`
+            else if (currentFilters.moods.size > 0 || currentFilters.genres.size > 0) {
+                subtitle = 'Curated for your selected preferences'
+            }
+            subtitleEl.textContent = subtitle
+            
+            // Update active filters indicator
+            const totalActive = currentFilters.moods.size + currentFilters.genres.size + 
+                               currentFilters.platforms.size + currentFilters.durations.size + 
+                               (currentFilters.minRating > 6.0 ? 1 : 0) + (currentFilters.decade !== 'all' ? 1 : 0)
+            
+            const activeCountEl = document.getElementById('active-filters-count')
+            if (totalActive > 0) {
+                activeCountEl.classList.remove('hidden')
+                activeCountEl.classList.add('flex')
+                document.getElementById('active-count').textContent = totalActive
+            } else {
+                activeCountEl.classList.add('hidden')
+                activeCountEl.classList.remove('flex')
+            }
+        }
+
+        function renderMovies(filteredMovies) {
+            const grid = document.getElementById('movie-grid')
+            const emptyState = document.getElementById('empty-state')
+            
+            grid.innerHTML = ''
+            
+            if (filteredMovies.length === 0) {
+                grid.classList.add('hidden')
+                emptyState.classList.remove('hidden')
+                return
+            }
+            
+            grid.classList.remove('hidden')
+            emptyState.classList.add('hidden')
+            
+            filteredMovies.forEach(movie => {
+                const card = document.createElement('div')
+                card.className = `movie-card group bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden cursor-pointer flex flex-col`
+                
+                const isInWatchlist = watchlist.includes(movie.id)
+                const platformBadges = movie.platforms.map(p => {
+                    const color = p === 'netflix' ? '#E50914' : p === 'disney-plus' ? '#006E95' : '#00A89B'
+                    const label = p === 'netflix' ? 'N' : p === 'disney-plus' ? 'D+' : 'P'
+                    return `<span class="text-[9px] font-bold px-1.5 py-px rounded" style="background:${color}22;color:${color}">${label}</span>`
+                }).join('')
+                
+                const durationLabel = movie.duration < 90 ? 'Short' : movie.duration <= 120 ? 'Medium' : movie.duration <= 150 ? 'Long' : 'Epic'
+                
+                card.innerHTML = `
+                    <div class="relative">
+                        <img src="${movie.poster}" alt="${movie.title} poster" 
+                             class="poster w-full aspect-[2/3] object-cover">
+                        
+                        <!-- Top badges -->
+                        <div class="absolute top-3 left-3 flex gap-1">
+                            ${platformBadges}
+                        </div>
+                        
+                        <!-- Rating badge -->
+                        <div class="absolute top-3 right-3 bg-black/70 backdrop-blur px-2 py-0.5 rounded-2xl flex items-center text-xs font-bold">
+                            <span class="text-yellow-400">${movie.rating}</span>
+                            <i class="fa-solid fa-star text-yellow-400 ml-0.5 text-[10px]"></i>
+                        </div>
+                        
+                        <!-- Hover overlay -->
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black/90 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <div class="text-xs text-emerald-400 font-medium">${durationLabel} • ${movie.year}</div>
+                                    <div class="text-xs text-zinc-400 mt-0.5 line-clamp-2">${movie.synopsis.substring(0, 80)}...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-2 mt-4">
+                                <button onclick="event.stopImmediatePropagation(); playTrailer(${movie.id}, event)" 
+                                        class="flex-1 bg-white/90 hover:bg-white text-black text-xs font-bold py-1.5 rounded-2xl flex items-center justify-center gap-x-1 transition-all">
+                                    <i class="fa-solid fa-play text-xs"></i>
+                                    <span class="font-bold">Trailer</span>
+                                </button>
+                                
+                                <button onclick="event.stopImmediatePropagation(); toggleWatchlist(${movie.id}, event)" 
+                                        class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-2xl transition-all ${isInWatchlist ? 'bg-red-600 text-white' : 'bg-white/90 hover:bg-white text-black'}">
+                                    <i class="fa-solid fa-heart ${isInWatchlist ? '' : 'text-red-500'}"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 flex-1 flex flex-col">
+                        <div class="font-bold text-lg leading-tight tracking-tight">${movie.title}</div>
+                        <div class="flex items-center justify-between mt-auto pt-3 border-t border-zinc-800">
+                            <div class="flex flex-wrap gap-1">
+                                ${movie.genres.slice(0, 2).map(g => 
+                                    `<span class="text-[9px] px-2 py-px bg-zinc-800 rounded text-zinc-400">${g}</span>`
+                                ).join('')}
+                            </div>
+                            <div onclick="event.stopImmediatePropagation(); showMovieDetails(${movie.id})" 
+                                 class="text-xs text-red-400 hover:text-red-500 cursor-pointer font-medium flex items-center gap-x-1">
+                                <span>Details</span> <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                `
+                
+                // Click whole card for details (except buttons)
+                card.onclick = (e) => {
+                    if (!e.target.closest('button')) {
+                        showMovieDetails(movie.id)
+                    }
+                }
+                
+                grid.appendChild(card)
+            })
+        }
+
+        // Show movie details modal
+        function showMovieDetails(movieId) {
+            const movie = movies.find(m => m.id === movieId)
+            if (!movie) return
+            
+            currentModalMovie = movie
+            
+            // Fill modal
+            document.getElementById('modal-poster').src = movie.poster
+            document.getElementById('modal-title').textContent = movie.title
+            document.getElementById('modal-year').textContent = movie.year
+            document.getElementById('modal-rating').innerHTML = `${movie.rating} <span class="text-xs align-super text-yellow-400">/10</span>`
+            document.getElementById('modal-duration').innerHTML = `${movie.duration} min <span class="text-xs text-zinc-500">• ${movie.language}</span>`
+            document.getElementById('modal-synopsis').textContent = movie.synopsis
+            document.getElementById('modal-director').textContent = movie.director
+            document.getElementById('modal-cast').textContent = movie.cast.join(', ')
+            document.getElementById('modal-moods').textContent = movie.moods.join(' • ')
+            
+            // Genres
+            const genreContainer = document.getElementById('modal-genres')
+            genreContainer.innerHTML = movie.genres.map(g => 
+                `<span class="px-4 py-1 text-xs rounded-3xl border border-zinc-700 text-zinc-300">${g}</span>`
+            ).join('')
+            
+            // Platforms
+            const platformContainer = document.getElementById('modal-platform-badges')
+            platformContainer.innerHTML = movie.platforms.map(p => {
+                const color = p === 'netflix' ? '#E50914' : p === 'disney-plus' ? '#006E95' : '#00A89B'
+                const label = p === 'netflix' ? 'Netflix' : p === 'disney-plus' ? 'Disney+' : 'Prime Video'
+                return `<span class="px-3 py-px text-xs font-bold rounded-2xl" style="background:${color}22;color:${color}">${label}</span>`
+            }).join('')
+            
+            // Watchlist button
+            const watchBtn = document.getElementById('modal-watchlist-btn')
+            const isInWatchlist = watchlist.includes(movie.id)
+            updateWatchlistButton(watchBtn, isInWatchlist)
+            
+            // Show modal
+            document.getElementById('details-modal').classList.remove('hidden')
+            document.getElementById('details-modal').classList.add('flex')
+        }
+        
+        function updateWatchlistButton(btn, isInWatchlist) {
+            if (isInWatchlist) {
+                btn.innerHTML = `<i class="fa-solid fa-heart text-red-500 mr-2"></i> <span>Remove from Watchlist</span>`
+                btn.onclick = () => {
+                    toggleWatchlist(currentModalMovie.id)
+                    updateWatchlistButton(btn, false)
+                }
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-heart mr-2"></i> <span>Save to Watchlist</span>`
+                btn.onclick = () => {
+                    toggleWatchlist(currentModalMovie.id)
+                    updateWatchlistButton(btn, true)
+                }
+            }
+        }
+
+        function hideDetailsModal() {
+            const modal = document.getElementById('details-modal')
+            modal.classList.remove('flex')
+            modal.classList.add('hidden')
+            currentModalMovie = null
+        }
+
+        // Play trailer
+        function playTrailer(movieId, event) {
+            if (event) event.stopImmediatePropagation()
+            
+            const movie = movies.find(m => m.id === movieId)
+            if (!movie || !movie.trailerId) {
+                alert("Trailer not available in this demo.")
+                return
+            }
+            
+            const modal = document.getElementById('trailer-modal')
+            const container = document.getElementById('video-container')
+            const titleEl = document.getElementById('trailer-movie-title')
+            
+            titleEl.textContent = movie.title
+            
+            container.innerHTML = `
+                <iframe width="100%" height="100%" 
+                        src="https://www.youtube.com/embed/${movie.trailerId}?autoplay=1&rel=0" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen></iframe>
+            `
+            
+            modal.classList.remove('hidden')
+            modal.classList.add('flex')
+        }
+        
+        function playTrailerFromModal() {
+            if (!currentModalMovie) return
+            hideDetailsModal()
+            setTimeout(() => {
+                playTrailer(currentModalMovie.id)
+            }, 300)
+        }
+        
+        function closeTrailerModal() {
+            const modal = document.getElementById('trailer-modal')
+            const container = document.getElementById('video-container')
+            
+            container.innerHTML = '' // Stop video
+            modal.classList.remove('flex')
+            modal.classList.add('hidden')
+        }
+
+        // Watchlist functions
+        function toggleWatchlist(movieId, event) {
+            if (event) event.stopImmediatePropagation()
+            
+            const index = watchlist.indexOf(movieId)
+            const movie = movies.find(m => m.id === movieId)
+            
+            if (index === -1) {
+                watchlist.push(movieId)
+                showToast(`Added <strong>${movie.title}</strong> to watchlist`)
+                
+                // Fun animation
+                if (Math.random() > 0.6) {
+                    createHeartBurst()
+                }
+            } else {
+                watchlist.splice(index, 1)
+                showToast(`Removed <strong>${movie.title}</strong> from watchlist`)
+            }
+            
+            localStorage.setItem('movieWatchlist', JSON.stringify(watchlist))
+            updateWatchlistCount()
+            
+            // Re-render current grid to update hearts
+            applyFilters()
+            
+            // If modal open, update button
+            if (currentModalMovie && currentModalMovie.id === movieId) {
+                const btn = document.getElementById('modal-watchlist-btn')
+                updateWatchlistButton(btn, index === -1)
+            }
+        }
+        
+        function toggleWatchlistFromModal() {
+            if (!currentModalMovie) return
+            toggleWatchlist(currentModalMovie.id)
+        }
+        
+        function updateWatchlistCount() {
+            document.getElementById('watchlist-count').textContent = watchlist.length
+        }
+        
+        function showWatchlist() {
+            if (watchlist.length === 0) {
+                showToast("Your watchlist is empty. Add some movies!")
+                return
+            }
+            
+            const savedMovies = movies.filter(m => watchlist.includes(m.id))
+            
+            const modalHTML = `
+                <div onclick="this.remove()" class="fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-6">
+                    <div onclick="event.stopImmediatePropagation()" class="bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+                        <div class="px-8 py-6 border-b border-zinc-800 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-3xl font-bold">My Watchlist</h3>
+                                <p class="text-sm text-zinc-500">${savedMovies.length} movies saved</p>
+                            </div>
+                            <button onclick="event.target.closest('.fixed').remove()" class="text-3xl text-zinc-400 hover:text-white">×</button>
+                        </div>
+                        
+                        <div class="overflow-y-auto p-6 space-y-3 flex-1">
+                            ${savedMovies.map(movie => `
+                                <div class="flex gap-5 bg-zinc-950 border border-zinc-800 rounded-3xl p-4 group">
+                                    <img src="${movie.poster}" class="w-20 h-28 object-cover rounded-2xl flex-shrink-0" alt="${movie.title}">
+                                    
+                                    <div class="flex-1 min-w-0 flex flex-col">
+                                        <div class="flex justify-between">
+                                            <div>
+                                                <div class="font-semibold text-xl">${movie.title}</div>
+                                                <div class="text-xs text-zinc-500">${movie.year} • ${movie.duration} min • ${movie.rating}★</div>
+                                            </div>
+                                            <button onclick="event.target.closest('.fixed').remove(); toggleWatchlist(${movie.id}); showWatchlist()" 
+                                                    class="text-red-500 hover:text-red-400 opacity-70 group-hover:opacity-100">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="mt-auto flex items-center justify-between">
+                                            <div class="flex gap-1.5">
+                                                ${movie.platforms.map(p => {
+                                                    const color = p === 'netflix' ? '#E50914' : p === 'disney-plus' ? '#006E95' : '#00A89B'
+                                                    return `<span class="text-xs px-2 py-px rounded" style="background:${color}22;color:${color}">${p === 'netflix' ? 'Netflix' : p === 'disney-plus' ? 'Disney+' : 'Prime'}</span>`
+                                                }).join('')}
+                                            </div>
+                                            
+                                            <button onclick="event.target.closest('.fixed').remove(); showMovieDetails(${movie.id})" 
+                                                    class="text-xs px-4 py-1 rounded-2xl border border-zinc-700 hover:bg-zinc-800 flex items-center gap-x-1">
+                                                <span>View</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="p-6 border-t border-zinc-800 text-center">
+                            <button onclick="event.target.closest('.fixed').remove()" 
+                                    class="px-8 py-3 text-sm font-semibold bg-white text-black rounded-3xl">Done</button>
+                        </div>
+                    </div>
+                </div>
+            `
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML)
+        }
+
+        function createHeartBurst() {
+            const colors = ['#e50914', '#f43f5e', '#fb7185']
+            for (let i = 0; i < 8; i++) {
+                const heart = document.createElement('div')
+                heart.innerHTML = `<i class="fa-solid fa-heart text-2xl" style="color: ${colors[i % colors.length]}"></i>`
+                heart.style.position = 'fixed'
+                heart.style.left = Math.random() * window.innerWidth + 'px'
+                heart.style.top = (window.innerHeight * 0.6 + Math.random() * 120) + 'px'
+                heart.style.zIndex = '9999'
+                heart.style.pointerEvents = 'none'
+                heart.style.transition = 'all 0.9s cubic-bezier(0.22, 1, 0.36, 1)'
+                document.body.appendChild(heart)
+                
+                setTimeout(() => {
+                    heart.style.transform = `translateY(-${180 + Math.random() * 120}px) scale(0.2)`
+                    heart.style.opacity = '0'
+                }, 50)
+                
+                setTimeout(() => heart.remove(), 1200)
+            }
+        }
+
+        // Surprise Me
+        function surpriseMe() {
+            const searchInput = document.getElementById('search-input')
+            searchInput.value = ''
+            currentSearch = ''
+            
+            // Clear some filters for variety
+            currentFilters.moods.clear()
+            currentFilters.genres.clear()
+            currentFilters.durations.clear()
+            currentFilters.minRating = 7.0
+            currentFilters.decade = 'all'
+            currentFilters.platforms.clear()
+            
+            // Pick a random movie that is highly rated
+            const goodMovies = movies.filter(m => m.rating >= 7.8)
+            const randomMovie = goodMovies[Math.floor(Math.random() * goodMovies.length)]
+            
+            // Show it prominently
+            showMovieDetails(randomMovie.id)
+            
+            // Toast
+            setTimeout(() => {
+                showToast(`🎲 Surprise pick: <strong>${randomMovie.title}</strong>!`, 2800)
+            }, 600)
+            
+            // Re-render grid with some filters applied for context
+            setTimeout(() => {
+                currentFilters.minRating = 7.0
+                applyFilters()
+            }, 1200)
+        }
+
+        // Presets
+        function applyPreset(preset) {
+            // Clear current filters first
+            clearAllFilters(false)
+            
+            const searchInput = document.getElementById('search-input')
+            searchInput.value = ''
+            currentSearch = ''
+            
+            switch (preset) {
+                case 'date-night':
+                    currentFilters.moods = new Set(['Romantic', 'Heartwarming'])
+                    currentFilters.genres = new Set(['Romance', 'Drama'])
+                    currentFilters.minRating = 7.5
+                    currentFilters.platforms = new Set(['disney-plus'])
+                    showToast('Date Night preset activated ❤️')
+                    break
+                    
+                case 'family-fun':
+                    currentFilters.moods = new Set(['Heartwarming', 'Funny', 'Inspiring'])
+                    currentFilters.genres = new Set(['Animation', 'Family', 'Adventure'])
+                    currentFilters.minRating = 7.8
+                    currentFilters.platforms = new Set(['disney-plus'])
+                    showToast('Family Fun preset activated 👨‍👩‍👧‍👦')
+                    break
+                    
+                case 'action-night':
+                    currentFilters.moods = new Set(['Action-packed', 'Epic', 'Thrilling'])
+                    currentFilters.genres = new Set(['Action', 'Sci-Fi', 'Adventure'])
+                    currentFilters.minRating = 7.5
+                    currentFilters.durations = new Set(['long', 'epic'])
+                    showToast('Action Night preset activated 💥')
+                    break
+                    
+                case 'chill-evening':
+                    currentFilters.moods = new Set(['Chill', 'Heartwarming'])
+                    currentFilters.genres = new Set(['Comedy', 'Romance', 'Drama'])
+                    currentFilters.minRating = 7.2
+                    currentFilters.durations = new Set(['medium'])
+                    showToast('Chill Evening preset activated 🌙')
+                    break
+            }
+            
+            // Update UI chips to reflect preset
+            setTimeout(() => {
+                renderMoodChips()
+                renderGenreChips()
+                renderPlatformButtons()
+                renderDurationChips()
+                applyFilters()
+            }, 80)
+        }
+
+        function clearAllFilters(shouldApply = true) {
+            currentFilters = {
+                moods: new Set(),
+                genres: new Set(),
+                platforms: new Set(),
+                durations: new Set(),
+                minRating: 6.0,
+                decade: 'all'
+            }
+            
+            currentSearch = ''
+            document.getElementById('search-input').value = ''
+            document.getElementById('clear-search').classList.add('hidden')
+            document.getElementById('clear-search').classList.remove('flex')
+            
+            // Reset UI
+            document.getElementById('rating-slider').value = 6.0
+            document.getElementById('rating-value').textContent = '6.0'
+            document.getElementById('decade-select').value = 'all'
+            document.getElementById('sort-select').value = 'match'
+            
+            renderMoodChips()
+            renderGenreChips()
+            renderPlatformButtons()
+            renderDurationChips()
+            
+            if (shouldApply) {
+                applyFilters()
+                showToast('Filters cleared')
+            }
+        }
+        
+        function clearSearch() {
+            const input = document.getElementById('search-input')
+            input.value = ''
+            currentSearch = ''
+            document.getElementById('clear-search').classList.add('hidden')
+            document.getElementById('clear-search').classList.remove('flex')
+            applyFilters()
+        }
+
+        // Simple toast notification
+        function showToast(message, duration = 2200) {
+            const toast = document.createElement('div')
+            toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-700 text-sm px-6 py-3 rounded-3xl shadow-xl flex items-center gap-x-3 z-[80]`
+            toast.innerHTML = `
+                <div class="text-red-400"><i class="fa-solid fa-check-circle"></i></div>
+                <div>${message}</div>
+            `
+            
+            document.body.appendChild(toast)
+            
+            setTimeout(() => {
+                toast.style.transition = 'all 0.3s ease'
+                toast.style.opacity = '0'
+                toast.style.transform = 'translate(-50%, 20px)'
+                setTimeout(() => toast.remove(), 300)
+            }, duration)
+        }
+
+        function setViewMode(mode) {
+            viewMode = mode
+            
+            const gridBtn = document.getElementById('view-grid-btn')
+            const listBtn = document.getElementById('view-list-btn')
+            const gridContainer = document.getElementById('movie-grid')
+            
+            if (mode === 'grid') {
+                gridBtn.classList.add('bg-zinc-800')
+                gridBtn.classList.remove('text-zinc-400')
+                listBtn.classList.remove('bg-zinc-800')
+                listBtn.classList.add('text-zinc-400')
+                gridContainer.className = `grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-5 movie-grid`
+            } else {
+                listBtn.classList.add('bg-zinc-800')
+                listBtn.classList.remove('text-zinc-400')
+                gridBtn.classList.remove('bg-zinc-800')
+                gridBtn.classList.add('text-zinc-400')
+                gridContainer.className = `grid grid-cols-1 gap-4 movie-grid max-w-3xl mx-auto`
+                // Note: List view would need different card HTML. For simplicity we keep grid but narrower.
+                // In a full production app we'd have a separate renderList() function.
+            }
+            
+            // Re-render with current filters
+            applyFilters()
+        }
+
+        // Boot the app
+        window.onload = init
+        
+        // Easter egg: Konami code for random movie
+        let konami = ''
+        document.addEventListener('keydown', function(e) {
+            konami += e.key
+            if (konami.length > 10) konami = konami.slice(-10)
+            if (konami.includes('ArrowUpArrowUpArrowDownArrowDownArrowLeftArrowRightArrowLeftArrowRightba')) {
+                konami = ''
+                const random = movies[Math.floor(Math.random() * movies.length)]
+                showMovieDetails(random.id)
+                showToast('🎮 Konami code activated! Special pick unlocked.')
+            }
+        })
+    </script>
+</body>
+</html>
