@@ -243,25 +243,27 @@ async function showMovieDetails(movie) {
     const details = await api.getMovieDetails(movie.id);
     const platformBadgesElement = document.getElementById('details-platform-badges');
     const watchlistText = document.getElementById('watchlist-text');
-
+    // Main info
     detailsPoster.src = movie.poster_path ? api.IMAGE_BASE_URL + movie.poster_path : 'https://via.placeholder.com/500x750?text=No+Image';
     detailsPoster.alt = `${movie.title} poster`;
     detailsTitle.textContent = movie.title;
     detailsYear.textContent = movie.release_date?.substring(0, 4) || 'N/A';
     detailsRating.textContent = movie.vote_average?.toFixed(1) || 'N/A';
     detailsDuration.textContent = `${details.runtime || 'N/A'} min`;
-    detailsGenres.innerHTML = movie.genre_ids?.map(id => `<span class="px-3 py-1 bg-zinc-800 rounded text-sm font-medium">${state.genreMap[id]}</span>`).join('') || '';
+    detailsGenres.innerHTML = movie.genre_ids?.map(id => `<span>${state.genreMap[id]}</span>`).join('') || '';
     detailsSynopsis.textContent = movie.overview || 'No description available.';
     detailsDirector.textContent = details.credits?.crew?.find(c => c.job === 'Director')?.name || 'N/A';
     detailsCast.textContent = details.credits?.cast?.slice(0, 3).map(c => c.name).join(', ') || 'N/A';
     detailsLanguage.textContent = details.original_language?.toUpperCase() || 'N/A';
     detailsMoods.textContent = 'Romantic, Cozy'; // Placeholder, can enhance
-
+    // Extra info
+    document.getElementById('details-budget').textContent = details.budget ? `$${details.budget.toLocaleString()}` : 'N/A';
+    document.getElementById('details-revenue').textContent = details.revenue ? `$${details.revenue.toLocaleString()}` : 'N/A';
+    document.getElementById('details-status').textContent = details.status || 'N/A';
+    document.getElementById('details-imdb').innerHTML = details.imdb_id ? `<a href="https://www.imdb.com/title/${details.imdb_id}" target="_blank" rel="noopener" style="color:#ffe066;">IMDB</a>` : 'N/A';
     // Platform badges (simplified for demo)
     platformBadgesElement.innerHTML = '<span class="px-2 py-1 bg-red-600 text-white text-xs font-bold rounded">NETFLIX</span>';
-
     detailsModal.style.display = 'flex';
-
     // Set up buttons
     watchTrailerBtn.onclick = () => {
       openTrailer(movie.id, movie.title);
