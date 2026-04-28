@@ -138,75 +138,76 @@
 
     <div id="details-modal" class="modal-overlay" style="display: none;" onclick="if (event.target.id === 'details-modal') hideDetailsModal()">
         <div class="modal-content details-modal-content">
-            <div class="details-modal-flex">
+            <div class="flex flex-col md:flex-row">
                 <!-- Poster -->
-                <div class="details-modal-poster">
-                    <img id="details-poster" class="w-full h-auto object-cover details-modal-img" alt="Movie poster">
-                    <div class="details-modal-badges">
+                <div class="md:w-2/5 relative">
+                    <img id="details-poster" class="w-full h-auto object-cover md:rounded-l-3xl" alt="Movie poster">
+                    <div class="absolute top-4 left-4 flex gap-2">
                         <div id="details-platform-badges" class="flex gap-1.5"></div>
                     </div>
+                    <div class="absolute bottom-0 inset-x-0 h-2/3 bg-gradient-to-t from-black to-transparent md:hidden"></div>
                 </div>
+
                 <!-- Info -->
-                <div class="details-modal-info">
-                    <button id="close-details-modal" class="details-modal-close" aria-label="Close details modal">
-                        <i class="fa-solid fa-times"></i>
-                    </button>
-                    <div class="details-modal-header">
-                        <h2 id="details-title"></h2>
-                        <span id="details-year"></span>
+                <div class="flex-1 p-8 md:pt-8 overflow-y-auto max-h-[92vh]">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-x-3">
+                                <h2 id="details-title" class="text-4xl font-bold tracking-tighter"></h2>
+                                <span id="details-year" class="text-3xl text-zinc-500 font-light"></span>
+                            </div>
+                            <div class="flex items-center gap-x-4 mt-1">
+                                <div class="flex items-center">
+                                    <span id="details-rating" class="text-2xl font-bold text-yellow-400"></span>
+                                    <i class="fa-solid fa-star ml-1 text-yellow-400"></i>
+                                </div>
+                                <span id="details-duration" class="text-sm px-3 py-px bg-zinc-800 rounded font-mono"></span>
+                            </div>
+                        </div>
+
+                        <button id="close-details-modal" class="text-zinc-400 hover:text-white transition-colors p-1 -mr-2">
+                            <i class="fa-solid fa-times text-3xl"></i>
+                        </button>
                     </div>
-                    <div class="details-modal-meta">
-                        <span id="details-rating"></span>
-                        <i class="fa-solid fa-star text-yellow-400"></i>
-                        <span id="details-duration"></span>
+
+                    <div class="mt-6">
+                        <div class="flex flex-wrap gap-2 mb-4" id="details-genres"></div>
+
+                        <p id="details-synopsis" class="text-zinc-300 leading-relaxed text-[15px]"></p>
                     </div>
-                    <div class="details-modal-genres" id="details-genres"></div>
-                    <p id="details-synopsis" class="details-modal-synopsis"></p>
-                    <div class="details-modal-grid">
+
+                    <div class="mt-7 grid grid-cols-2 gap-y-5 text-sm">
                         <div>
-                            <span class="details-modal-label">Directed by</span>
-                            <span id="details-director"></span>
+                            <span class="block text-xs uppercase tracking-widest text-zinc-500">Directed by</span>
+                            <span id="details-director" class="font-medium"></span>
                         </div>
                         <div>
-                            <span class="details-modal-label">Cast</span>
-                            <span id="details-cast"></span>
+                            <span class="block text-xs uppercase tracking-widest text-zinc-500">Cast</span>
+                            <span id="details-cast" class="font-medium"></span>
                         </div>
                         <div>
-                            <span class="details-modal-label">Language</span>
-                            <span id="details-language"></span>
+                            <span class="block text-xs uppercase tracking-widest text-zinc-500">Language</span>
+                            <span id="details-language" class="font-medium"></span>
                         </div>
                         <div>
-                            <span class="details-modal-label">Perfect for</span>
-                            <span id="details-moods"></span>
-                        </div>
-                        <div>
-                            <span class="details-modal-label">Budget</span>
-                            <span id="details-budget"></span>
-                        </div>
-                        <div>
-                            <span class="details-modal-label">Revenue</span>
-                            <span id="details-revenue"></span>
-                        </div>
-                        <div>
-                            <span class="details-modal-label">Status</span>
-                            <span id="details-status"></span>
-                        </div>
-                        <div>
-                            <span class="details-modal-label">IMDB</span>
-                            <span id="details-imdb"></span>
+                            <span class="block text-xs uppercase tracking-widest text-zinc-500">Perfect for</span>
+                            <span id="details-moods" class="font-medium"></span>
                         </div>
                     </div>
-                    <div class="details-modal-actions">
-                        <button id="watch-trailer-btn" class="details-modal-action-btn">
+
+                    <div class="mt-8 flex flex-wrap gap-3">
+                        <button id="watch-trailer-btn" class="flex-1 md:flex-none flex items-center justify-center gap-x-2 bg-red-600 hover:bg-red-700 transition-colors text-white font-semibold px-7 py-3.5 rounded-3xl">
                             <i class="fa-solid fa-play mr-1"></i>
                             <span>WATCH TRAILER</span>
                         </button>
-                        <button id="add-to-watchlist-btn" class="details-modal-action-btn outline">
+
+                        <button id="add-to-watchlist-btn" class="flex-1 md:flex-none flex items-center justify-center gap-x-2 border border-zinc-700 hover:bg-zinc-800 transition-colors px-6 py-3.5 rounded-3xl font-medium">
                             <i class="fa-solid fa-heart"></i>
                             <span id="watchlist-text">Save to Watchlist</span>
                         </button>
                     </div>
-                    <div class="details-modal-note">
+
+                    <div class="mt-5 text-[10px] text-center text-zinc-500">
                         <i class="fa-solid fa-info-circle mr-1"></i>
                         Data is for demonstration. Real availability varies by region.
                     </div>
